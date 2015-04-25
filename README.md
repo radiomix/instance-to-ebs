@@ -7,6 +7,7 @@ docu](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/creating-an-ami-instanc
 describes how to copy an Instance Stored AMI into an EBS backed AMI. As
 it is a process with several steps, we split the task in two: 
 
+________
 #### **Step 1**: Bundle and register an Instance backed AMI
 To bundle and register an Instance backed AMI, run the two shell
 scripts on the instance to be bundled:
