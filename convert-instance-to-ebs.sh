@@ -28,7 +28,7 @@ fi
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
   echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
-  return [-11]
+  return -11
 fi
 
 # check ec2 tools
@@ -59,7 +59,7 @@ fi
 result=$(sudo test -w $aws_ebs_mount_point && echo yes)
 if [[ $result != yes ]]; then
   echo "***  ERROR: directory $aws_ebs_mount_point to mount the image is not writable!! "
-  return [-12]
+  return -12
 fi
 
 # aws availability zone
@@ -72,7 +72,7 @@ aws_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id/)
 aws_region=$AWS_REGION
 if [[ "$aws_region" == "" ]]; then
   echo "***  ERROR: No AWS_REGION given!! "
-  return [-2]
+  return -2
 fi
 echo "*** Using region: $aws_region"
 
@@ -80,18 +80,18 @@ echo "*** Using region: $aws_region"
 aws_architecture=$AWS_ARCHITECTURE
 if [[ "$aws_architecture" == "" ]]; then
   echo "*** ERROR: No AWS_ARCHITECTURE given!! "
-  return [-3]
+  return -3
 fi
 echo "*** Using: architechture: $aws_architecture"
 
 # x509 cert/pk file
 if [[ "$AWS_PK_PATH" == "" ]]; then
   echo "*** ERROR: X509 private key file \"$AWS_PK_PATH\" not found!! "
-  return [-21]
+  return -21
 fi
 if [[ "$AWS_CERT_PATH" == "" ]]; then
   echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
-  return [-22]
+  return -22
 fi
 
 # base AMI the instance was launched off, needed to get kernel, virtual. type etc
@@ -101,12 +101,12 @@ if [[ "$aws_ami_id" == "" ]]; then
   read aws_ami_id
   if [[ "$aws_ami_id" == "" ]]; then
   	echo "*** ERROR: No AWS_AMI_ID given!! "
-  	return [-31]
+  	return -31
   fi
   aws_ami_description=$(sudo -E $EC2_HOME/bin/ec2-describe-images --region $aws_region $aws_ami_id)
   if [[ "$aws_ami_description" == "" ]]; then
   	echo "*** ERROR: Could not find AMI $aws_ami_id "
-  	return [-32]
+  	return -32
   fi
 fi
 export AWS_AMI_ID=$aws_ami_id
@@ -157,7 +157,7 @@ echo $output
 aws_volume_id=$(echo $output | cut -d ' ' -f 2)
 if [[ "$aws_volume_id" == "" ]]; then
   echo "*** ERROR: No Aws Volume created!"
-  return [-42]
+  return -42
 fi
 echo -n "*** Using AWS Volume:$aws_volume_id. Waiting to become ready . "
 

@@ -13,8 +13,8 @@
 #   - some commands need sudo rights
 #   - we need our AWS x509-pk/cert files on this machine
 #
-# CAUTION: to export env variables properly, this script should be called
-#  $:>. aws-tools.sh
+# CAUTION: to export env variables properly, this script should be sourced:
+#  $:>source aws-tools.sh
 #
 #######################################
 ## config variables
@@ -38,13 +38,12 @@ aws_architecture=$AWS_ARCHITECTURE
 
 ######################################
 ## packages needed anyways
-#echo "*** Installing packages 'ruby unzip wget openssl'"
+# We neede some packages:
 #sudo apt-get -q update
 #sudo apt-get -q install -y --force-yes ruby unzip wget openssl
 ## we experienced curl SSL errors as in
 ## http://tiku.io/questions/3051603/amazon-ec2-s3-self-signed-certificate-ssl-failure-when-using-ec2-upload-bundle
 ## so we reload the root certificates
-## Peter comment out
 #sudo update-ca-certificates
 
 ######################################
@@ -66,7 +65,7 @@ rm -f ec2-ami-tools.zip ec2-api-tools.zip
 # used by ec-tools
 echo "*** SETTING JAVA PATH"
 java_bin=$(which java)
-# if [[ "$java_bin" == "" ]]; then
+ if [[ "$java_bin" == "" ]]; then
 #   echo -n " ERROR:  No Java version found! Should Java be installed? [y|N]"
 #   read input
 #   if [[ "$input" == "y" ]]; then
@@ -74,10 +73,10 @@ java_bin=$(which java)
 #        sudo apt-get install -y --force-yes default-jre
 #        java_bin=$(which java)
 #    else 
-#        echo "***  ERROR: No Java version found! EXIT!"
-#        return [-11]
+        echo "***  ERROR: No Java version found! EXIT!"
+        return -11
 #    fi
-#fi
+fi
 java_path=$(readlink -f $java_bin)
 echo $java_bin  $java_path
 java_home=${java_path/'/bin/java'/''}
@@ -167,7 +166,7 @@ then
   read aws_cert_path
   if [ ! -f "$aws_cert_path"  ]; then
         echo "*** ERROR: AWS X509 CERT FILE NOT FOUND IN:$aws_cert_path"
-        return [-1]
+        return -1
   fi
   export AWS_CERT_PATH=$aws_cert_path
 fi
@@ -178,7 +177,7 @@ then
   read aws_pk_path
   if [  ! -f "$aws_pk_path" ]; then
         echo "*** ERROR: AWS X509 PK FILE NOT FOUND IN:$aws_pk_path"
-        return [-1]
+        return -1
   fi
 fi
 export AWS_PK_PATH=$aws_pk_path
