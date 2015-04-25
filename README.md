@@ -9,7 +9,7 @@ it is a process with several steps, we split the task in two:
 
 #### **Step 1**: Bundle and register an Instance backed AMI
 To bundle and register an Instance backed AMI, run the two shell
-scripts:
+scripts on the instance to be bundled:
 ```
 $source aws-tools.sh
 $source bundle_intance.sh
@@ -28,7 +28,7 @@ parameters for **Step 2**.
 
 #### **Step 2**: Convert and register an Instance backed AMI into an EBS backed AMI
 To unbundle the Instance backed AMI and register an EBS backed AMI, you
-need
+boot an EBS backed AMI and load the X.509 files up. You also need
 the log file `bundle-2015-04-24-10-37-19.log` containing the AWS
 paramter of **Step 1** at hand. Then run the two shell scripts:
 ```
@@ -67,9 +67,9 @@ checked and set by the scripts:
 installed.
  + `JAVA_HOME=$java_home`
 
-**Step 1** also needs  ***X.509 Cert*** and ***Private Key***.
+**Step 1** and **Step 2** need  **X.509 Cert** and **Private Key** as
 EC2 commands partly use an X.509 certificate -even self signed- to
-encrypt communication. You can either generate these files from the AWS
+encrypt communication. You can either optain them from the AWS
 console under _Security Credentials_ or generate them by hand, after
 openssl installation. To generate and self sign a certificate valid for
 10 years in 2048 bit type:
@@ -78,13 +78,12 @@ openssl genrsa 2048 > private-key.pem
 openssl req -new -x509 -nodes -sha1 -days 3650 -key private-key.pem
 -outform PEM > certificate.pem
 ```
-Generating the Certificate one will be asked for information included in
+Generating the Certificate asks for information included in
 the certificate. You can use the default values or input your data.
-The Certificate has to be uploaded to the AWS console, showing a
+The Certificate needs to be uploaded to the AWS console, showing a
 thumbprint. It is usefull to rename the cert and key file to reflect the
 thumbprint. 
-Both cert and private key have to be uploaded in both steps before
-bundling.
+Both cert and private key have to be uploaded onto both AMIs.
 
 ### Scripts
  + [`aws-tools.sh`](aws-tools.sh) 
