@@ -4,8 +4,8 @@ Copy an Instance Backed AMI into an EBS Backed AMI
 ## Goal
 The [AWS
 docu](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/creating-an-ami-instance-store.html#Using_ConvertingS3toEBS) 
-describes how to copy an Instance Stored AMI into an EBS backed AMI. As
-it is a process with several steps, we split the task in two: 
+describes how to copy an Instance Stored AMI into an EBS backed AMI. 
+As it is a process with several steps, we started splitting the task in two. The impatient just jumps to [all in one](#allInOne) step. 
 
 ________
 #### **Step 1**: Bundle and register an Instance backed AMI
@@ -34,6 +34,15 @@ paramter of **Step 1** at hand. Then run the shell script:
 ```
 $./convert-instance-to-ebs.sh
 ```
+
+#### *** All in one *** Bundle and register and EBS in one big step: {#allInONe}
+To bundle and register an Instance backed AMI as an EBS backed one, we provide
+the script `register-ebs.sh`. It bundles the AMI locally, attaches an EBS
+volume, unbundles to the EBS volume and registers an AMI:
+```
+$./register-ebs.sh
+```
+
 -------------
 ### Prerequisites
 The scripts relay on these packages to be installed on the AMI to be
@@ -102,6 +111,18 @@ Both cert and private key have to be uploaded onto both AMIs.
   - dowloads and unbundles the previous manifest
   - creates a snapshot and registers an AMI
   - unmounts and dettaches the EBS volume
+ + [`register-ebs.sh`](register-ebs.sh)
+  - installs packages `gdisk`,`kpartx` and `grub` (legacy)
+  - checks for command line kernel parameters and its counterpart in
+    `/boot/grub/menu.lst` and edit them
+  - checks for `efi` partitions in `/etc/fstab`
+  - check and set bundle parameters
+  - bundles the image locally
+  - creates and attaches an EBS volume
+  - unbundles the previous manifest
+  - creates a snapshot and registers an AMI
+  - unmounts and dettaches the EBS volume
+
 
 #### Processes to stop
 To bundle an instance, all programs writing to root device have to be
