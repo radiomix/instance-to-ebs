@@ -318,7 +318,7 @@ sleep 2
 
 ## stop services
 start_stop_command=stop
-start_stop 
+start_stop_service 
 
 #######################################
 ### this is bundle-work
@@ -335,7 +335,7 @@ sleep 2
 ### TODO start/stop service
 ## stop services
 start_stop_command=start
-start_stop 
+start_stop_service
 
 export AWS_MANIFEST=$prefix.manifest.xml
 
