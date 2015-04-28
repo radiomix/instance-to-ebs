@@ -96,22 +96,7 @@ fi
 echo "*** Using architecture:$aws_architecture"
 
 # x509 cert/pk file
-if [[ "$AWS_CERT_PATH" == "" ]]; then
-  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
-  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! " >> $log_file
-  exit -22
-else
-  export  AWS_CERT_PATH=$AWS_CERT_PATH
-fi
-
-if [[ "$AWS_CERT_PATH" == "" ]]; then
-  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
-  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! " >> $log_file
-  exit -22
-else
-  export  AWS_CERT_PATH=$AWS_CERT_PATH
-fi
-
+# gets checked in aws-tools.sh
 
 
 # descriptions
@@ -119,9 +104,9 @@ aws_snapshot_description="$project AMI: "$current_instance_id", delete after reg
 
 ## services to stop/start while bundeling
 services="jenkins rabbitmq-server redis-server jpdm"
-echo "These services will be stopped during bundling:"
+echo "These services can be stopped during bundling:"
 echo "\"$services\""
-echo -n "Do you want to stop \"$services\" [n|Y]" 
+echo -n "Do you want to stop services \"$services\" [n|Y]" 
 read input
 if [[ "$input" == "n" ]];then
   echo "You can type in services you want to stop, each seperated by white space."
@@ -135,13 +120,14 @@ sudo apt-get install -y --force-yes  pv
 
 ## end config variables
 ######################################
-
+log_message="
+*** Using these services to stop:$services
+*** Bundling Instance:$current_instance_id of AMI $current_ami_id:$output" 
+echo $log_message
+echo $log_message >> $log_file
 
 ######################################
-echo "*** Using these services to stop:$services"
-echo "*** Using these services to stop:$services" >> $log_file
-echo "*** Bundling Instance:$current_instance_id of AMI $current_ami_id:"$output
-echo "*** Bundling Instance:$current_instance_id of AMI $current_ami_id:"$output >> $log_file
+## prepare bundling
 
 ## packages needed anyways
 echo "*** Installing packages 'gdisk kpartx'"
@@ -353,9 +339,7 @@ echo $bundle_command >> $log_file
 $bundle_command
 sleep 2
 
-
-### TODO start/stop service
-## stop services
+## start services
 start_stop_command=start
 start_stop_service
 
