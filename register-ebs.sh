@@ -63,8 +63,8 @@ if [[ ! -d $bundle_dir ]]; then
 fi
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
-  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
-  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! " >> $log_file
+  $log_message="*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
+  log_output
   exit -11
 fi
 
@@ -80,8 +80,8 @@ aws_secret_key=$AWS_SECRET_KEY
 # region
 aws_region=$AWS_REGION
 if [[ "$aws_region" == "" ]]; then
-  echo "*** ERROR: No AWS_REGION given!! "
-  echo "*** ERROR: No AWS_REGION given!! " >> $log_file
+  log_message="*** ERROR: No AWS_REGION given!! "
+  log_output
   exit -2
 fi
 echo "*** Using region:$aws_region"
@@ -89,8 +89,8 @@ echo "*** Using region:$aws_region"
 # architecture
 aws_architecture=$AWS_ARCHITECTURE
 if [[ "$aws_architecture" == "" ]]; then
-  echo "*** ERROR: No AWS_ARCHITECTURE given!! "
-  echo "*** ERROR: No AWS_ARCHITECTURE given!! " >> $log_file
+  log_message="*** ERROR: No AWS_ARCHITECTURE given!! "
+  log_output
   exit -3
 fi
 echo "*** Using architecture:$aws_architecture"
@@ -123,9 +123,7 @@ sudo apt-get install -y --force-yes  pv
 log_message="
 *** Using these services to stop:$services
 *** Bundling Instance:$current_instance_id of AMI $current_ami_id:$output" 
-echo $log_message
-echo $log_message >> $log_file
-
+log_output
 ######################################
 ## prepare bundling
 
@@ -136,18 +134,19 @@ sudo apt-get install -y gdisk kpartx
 
 #######################################
 ## check grub version, we need grub legacy
-echo  "*** Installing grub verions 0.9x"
-echo  "*** Installing grub verions 0.9x" >> $log_file
+log_message="*** Installing grub verions 0.9x"
+log_output
 sudo grub-install --version
 sudo apt-get install -y grub
 grub_version=$(grub --version)
-echo "*** Grub version:$grub_version."
-echo "*** Grub version:$grub_version." >> $log_file
+log_message="*** Grub version:$grub_version."
+log_output
 
 #######################################
 ## find root device to check grub version
-echo "*** Checking root device"
-echo "*** Checking root device" >> $log_file
+log_message="*** Checking root device"
+log_output
+
 mount | grep sda
 lsblk  #not on all distros available
 ### read the root device
@@ -179,8 +178,8 @@ fi
 
 #######################################
 ### remove evi entries in /etc/fstab if exist
-echo "*** Checking for efi/uefi partitions in /etc/fstab"
-echo "*** Checking for efi/uefi partitions in /etc/fstab" >> $log_file
+log_message="*** Checking for efi/uefi partitions in /etc/fstab"
+log_output
 efi=$(grep -i efi /etc/fstab)
 if [[ "$efi" != "" ]]; then
   echo "Please delete these UEFI/EFI partition entries \"$efi\" in /etc/fstab"
@@ -232,8 +231,8 @@ fi
 # check if writable
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
-  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
-  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! " >> $log_file
+  log_message="*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
+  log_output
   exit -11
 fi
 
@@ -248,8 +247,8 @@ read letter
 if [[ "$letter" != "" ]]; then
     aws_ebs_device=/dev/xvd$letter
 fi
-echo "*** Using device:$aws_ebs_device"
-echo "*** Using device:$aws_ebs_device" >> $log_file
+log_message="*** Using device:$aws_ebs_device"
+log_output
 
 aws_ebs_mount_point=/mnt/ebs
 if [[ ! -d $aws_ebs_mount_point ]]; then
@@ -257,8 +256,8 @@ if [[ ! -d $aws_ebs_mount_point ]]; then
 fi
 result=$(sudo test -w $aws_ebs_mount_point && echo yes)
 if [[ $result != yes ]]; then
-  echo "***  ERROR: directory $aws_ebs_mount_point to mount the image is not writable!! "
-  echo "***  ERROR: directory $aws_ebs_mount_point to mount the image is not writable!! " >> $log_file
+  log_message="***  ERROR: directory $aws_ebs_mount_point to mount the image is not writable!! "
+  log_output
   exit -12
 fi
 
@@ -270,8 +269,7 @@ log_message="
 *** Using block_device:$blockDevice
 *** Using EC2 version:$ec2_version"
 ## write output to log file
-echo  "$log_message"
-echo  "$log_message" >> $log_file
+log_output
 sleep 3
 start=$SECONDS
 
@@ -279,48 +277,45 @@ start=$SECONDS
 ######################################
 ## creating ebs volume to be bundle root dev
 echo "*** Creating EBS Volume to bundle"
-output=$(sudo -E $EC2_HOME/bin/ec2-create-volume --size 12 --region $aws_region --availability-zone $aws_avail_zone)
-echo $output
-echo $output >> $log_file
-aws_bundle_volume_id=$(echo $output | cut -d ' ' -f 2)
+log_message=$(sudo -E $EC2_HOME/bin/ec2-create-volume --size 12 --region $aws_region --availability-zone $aws_avail_zone)
+log_output
+aws_bundle_volume_id=$(echo $log_message | cut -d ' ' -f 2)
 if [[ "$aws_bundle_volume_id" == "" ]]; then
-  echo "*** ERROR: No Aws Volume created!"
-  echo "*** ERROR: No Aws Volume created!" >> $log_file
+  log_message="*** ERROR: No Aws Volume created!"
+  log_output
   exit -42
 fi
 echo -n "*** Using AWS Volume:$aws_bundle_volume_id. Waiting to become ready . "
 
 ######################################
 ## wait until volume is available
-output=""
-while [[ "$output" == "" ]]
+log_message=""
+while [[ "$log_message" == "" ]]
 do
-    output=$($EC2_HOME/bin/ec2-describe-volumes --region $aws_region $aws_bundle_volume_id | grep available)
+    log_message=$($EC2_HOME/bin/ec2-describe-volumes --region $aws_region $aws_bundle_volume_id | grep available)
     echo -n " ."
     sleep 1
 done
 echo ""
-echo $output
-echo $output >> $log_file
-output=$($EC2_HOME/bin/ec2-create-tags $aws_bundle_volume_id  --region $aws_region --tag Name="$aws_snapshot_description")
-echo $output
-echo $output >> $log_file 
+log_output
+log_message=$($EC2_HOME/bin/ec2-create-tags $aws_bundle_volume_id  --region $aws_region --tag Name="$aws_snapshot_description")
+log_output
 
 #######################################
 ## attach volume
 echo "*** Attaching EBS Volume:$aws_bundle_volume_id"
-output=$(sudo -E $EC2_HOME/bin/ec2-attach-volume $aws_bundle_volume_id -instance $current_instance_id --device $aws_ebs_device --region $aws_region)
-echo $output
-echo $output >> $log_file
-output=""
-while [[ "$output" == "" ]]
+log_message=$(sudo -E $EC2_HOME/bin/ec2-attach-volume $aws_bundle_volume_id -instance $current_instance_id --device $aws_ebs_device --region $aws_region)
+log_output
+log_message=""
+while [[ "$log_message" == "" ]]
 do
-    output=$($EC2_HOME/bin/ec2-describe-volumes --region $aws_region $aws_bundle_volume_id | grep attached)
+    log_message=$($EC2_HOME/bin/ec2-describe-volumes --region $aws_region $aws_bundle_volume_id | grep attached)
     echo -n " ."
     sleep 1
 done
 echo ""
-echo $output >> $log_file
+log_output
+
 lsblk
 sleep 2
 
@@ -334,9 +329,9 @@ start_stop_service
 sleep 2
 #######################################
 echo "*** Bundleing AMI, this may take several minutes "
-bundle_command="sudo -E $EC2_AMITOOL_HOME/bin/ec2-bundle-vol -k $AWS_PK_PATH -c $AWS_CERT_PATH -u $AWS_ACCOUNT_ID -r x86_64 -e /tmp/cert/ -d $bundle_dir -p $prefix  $blockDevice $partition --no-filter --batch"
-echo $bundle_command >> $log_file
-$bundle_command
+log_message="sudo -E $EC2_AMITOOL_HOME/bin/ec2-bundle-vol -k $AWS_PK_PATH -c $AWS_CERT_PATH -u $AWS_ACCOUNT_ID -r x86_64 -e /tmp/cert/ -d $bundle_dir -p $prefix  $blockDevice $partition --no-filter --batch"
+log_output
+$log_message
 sleep 2
 
 ## start services
@@ -367,11 +362,7 @@ log_message="***
 *** Region:$aws_region
 ***
 *** Bundled AMI:$current_instance_id of AMI:$current_ami_id in $period seconds"
-
-## write log message to stdout and to log file
-echo "$log_message"
-echo "$log_message" >> $log_file
-
+log_output
 
 ######################################
 ## extract image name and copy image to EBS volume
@@ -404,9 +395,9 @@ sudo umount $aws_ebs_device
 ## create a snapshot and verify it
 echo "*** Creating Snapshot from Volume:$aws_bundle_volume_id."
 echo "*** This may take several minutes"
-output=$($EC2_HOME/bin/ec2-create-snapshot $aws_bundle_volume_id --region $aws_region -d "$aws_snapshot_description" -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY )
+log_message=$($EC2_HOME/bin/ec2-create-snapshot $aws_bundle_volume_id --region $aws_region -d "$aws_snapshot_description" -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY )
 aws_snapshot_id=$(echo $output | cut -d ' ' -f 2)
-echo $output
+log_output
 echo -n "*** Using snapshot:$aws_snapshot_id. Waiting to become ready . "
 
 #######################################
@@ -419,8 +410,8 @@ do
     sleep 3
 done
 echo ""
-completed=$($EC2_HOME/bin/ec2-describe-snapshots $aws_snapshot_id --region $aws_region | grep completed)
-echo $completed >> $log_file
+log_message=$($EC2_HOME/bin/ec2-describe-snapshots $aws_snapshot_id --region $aws_region | grep completed)
+log_output
 
 #######################################
 ## register a new AMI from the snapshot
@@ -429,25 +420,25 @@ echo $output
 echo $output >> $log_file
 aws_registerd_ami_id=$(echo $output | cut -d ' ' -f 2)
 output=$($EC2_HOME/bin/ec2-create-tags $aws_registerd_ami_id --region $aws_region --tag Name="$aws_ami_description" --tag Project=$project)
-echo "*** Registerd new AMI:$aws_registerd_ami_id"
-echo "*** Registerd new AMI:$aws_registerd_ami_id" >> $log_file
+log_message="*** Registerd new AMI:$aws_registerd_ami_id"
+log_output
 
 ######################################
 ## unmount and detach EBS volume
-echo "*** Detaching EBS Volume:$aws_bundle_volume_id"
-echo "*** Detaching EBS Volume:$aws_bundle_volume_id" >> $log_file
+log_message="*** Detaching EBS Volume:$aws_bundle_volume_id"
+log_output
 $EC2_HOME/bin/ec2-detach-volume $aws_bundle_volume_id --region $aws_region -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
 
 #######################################
 ## and delete the volume and remove bundle-files
-echo "*** Please delete EBS Volume:$aws_bundle_volume_id"
-echo "*** Please delete EBS Volume:$aws_bundle_volume_id" >> $log_file
+log_message="*** Please delete EBS Volume:$aws_bundle_volume_id"
+log_output
 #$EC2_HOME/bin/ec2-delete-volume $aws_bundle_volume_id  -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
 echo "*** Deleting EBS Volume:$aws_volume_id"
 sudo rm -rf $bundle_dir/*
 #######################################
 cd $cwd
-echo "*** Finished! Created AMI: $aws_registerd_ami_id ***"
-echo "*** Finished! Created AMI: $aws_registerd_ami_id ***" >> $log_file
+log_message="*** Finished! Created AMI: $aws_registerd_ami_id ***"
+log_output
 date >> $log_file
 
