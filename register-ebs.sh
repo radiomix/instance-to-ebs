@@ -51,6 +51,7 @@ fi
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
   echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
+  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! " >> $log_file
   exit -11
 fi
 
@@ -67,6 +68,7 @@ aws_secret_key=$AWS_SECRET_KEY
 aws_region=$AWS_REGION
 if [[ "$aws_region" == "" ]]; then
   echo "*** ERROR: No AWS_REGION given!! "
+  echo "*** ERROR: No AWS_REGION given!! " >> $log_file
   exit -2
 fi
 echo "*** Using region:$aws_region"
@@ -75,6 +77,7 @@ echo "*** Using region:$aws_region"
 aws_architecture=$AWS_ARCHITECTURE
 if [[ "$aws_architecture" == "" ]]; then
   echo "*** ERROR: No AWS_ARCHITECTURE given!! "
+  echo "*** ERROR: No AWS_ARCHITECTURE given!! " >> $log_file
   exit -3
 fi
 echo "*** Using architecture:$aws_architecture"
@@ -82,6 +85,7 @@ echo "*** Using architecture:$aws_architecture"
 # x509 cert/pk file
 if [[ "$AWS_CERT_PATH" == "" ]]; then
   echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
+  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! " >> $log_file
   exit -22
 else
   export  AWS_CERT_PATH=$AWS_CERT_PATH
@@ -89,6 +93,7 @@ fi
 
 if [[ "$AWS_CERT_PATH" == "" ]]; then
   echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
+  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! " >> $log_file
   exit -22
 else
   export  AWS_CERT_PATH=$AWS_CERT_PATH
@@ -140,14 +145,17 @@ sudo apt-get install -y gdisk kpartx
 #######################################
 ## check grub version, we need grub legacy
 echo  "*** Installing grub verions 0.9x"
+echo  "*** Installing grub verions 0.9x" >> $log_file
 sudo grub-install --version
 sudo apt-get install -y grub
 grub_version=$(grub --version)
 echo "*** Grub version:$grub_version."
+echo "*** Grub version:$grub_version." >> $log_file
 
 #######################################
 ## find root device to check grub version
 echo "*** Checking root device"
+echo "*** Checking root device" >> $log_file
 mount | grep sda
 lsblk  #not on all distros available
 ### read the root device
@@ -164,23 +172,28 @@ echo "*** Checking for boot parameters"
 echo ""
 echo "*** Next line holds BOOT COMMAND LINE PARAMETERS:"
 cat /proc/cmdline
+cat /proc/cmdline >> $log_file
 echo "*** Next line holds KERNEL PARAMETERS in /boot/grub/menu.lst:"
 grep ^kernel /boot/grub/menu.lst 
+grep ^kernel /boot/grub/menu.lst >> $log_file
 echo
 echo  "If first entry differs from BOOT COMMAND LINE PARAMETER, please edit /boot/grub/menu.list "
 echo -n "Do you want to edit /boot/grub/menu.list to reflect command line? [y|N]:"
 read edit
 if  [[ "$edit" == "y" ]]; then
+  echo "*** Editing /boot/grub/menu.lst" >> $log_file
   sudo vi /boot/grub/menu.lst
 fi
 
 #######################################
 ### remove evi entries in /etc/fstab if exist
 echo "*** Checking for efi/uefi partitions in /etc/fstab"
-efi=$(grep -i efi /etc/fstab)
+echo "*** Checking for efi/uefi partitions in /etc/fstab" >> $log_file
+efi=$(grep -i efi /etc/fstab
 if [[ "$efi" != "" ]]; then
   echo "Please delete these UEFI/EFI partition entries \"$efi\" in /etc/fstab"
   read -t 20
+  echo "*** Editing /etc/fstab" >> $log_file
   sudo vi /etc/fstab
 fi
 
@@ -229,6 +242,7 @@ fi
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
   echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
+  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! " >> $log_file
   exit -11
 fi
 
@@ -244,6 +258,7 @@ if [[ "$letter" != "" ]]; then
     aws_ebs_device=/dev/xvd$letter
 fi
 echo "*** Using device:$aws_ebs_device"
+echo "*** Using device:$aws_ebs_device" >> $log_file
 
 aws_ebs_mount_point=/mnt/ebs
 if [[ ! -d $aws_ebs_mount_point ]]; then
@@ -252,6 +267,7 @@ fi
 result=$(sudo test -w $aws_ebs_mount_point && echo yes)
 if [[ $result != yes ]]; then
   echo "***  ERROR: directory $aws_ebs_mount_point to mount the image is not writable!! "
+  echo "***  ERROR: directory $aws_ebs_mount_point to mount the image is not writable!! " >> $log_file
   exit -12
 fi
 
@@ -278,6 +294,7 @@ echo $output >> $log_file
 aws_bundle_volume_id=$(echo $output | cut -d ' ' -f 2)
 if [[ "$aws_bundle_volume_id" == "" ]]; then
   echo "*** ERROR: No Aws Volume created!"
+  echo "*** ERROR: No Aws Volume created!" >> $log_file
   exit -42
 fi
 echo -n "*** Using AWS Volume:$aws_bundle_volume_id. Waiting to become ready . "
