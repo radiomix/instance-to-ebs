@@ -396,7 +396,7 @@ sudo umount $aws_ebs_device
 echo "*** Creating Snapshot from Volume:$aws_bundle_volume_id."
 echo "*** This may take several minutes"
 log_message=$($EC2_HOME/bin/ec2-create-snapshot $aws_bundle_volume_id --region $aws_region -d "$aws_snapshot_description" -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY )
-aws_snapshot_id=$(echo $output | cut -d ' ' -f 2)
+aws_snapshot_id=$(echo $log_message| cut -d ' ' -f 2)
 log_output
 echo -n "*** Using snapshot:$aws_snapshot_id. Waiting to become ready . "
 
