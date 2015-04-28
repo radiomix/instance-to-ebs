@@ -36,8 +36,15 @@ log_file=bundle-$date_fmt.log
 touch $log_file
 date >> $log_file
 
+# AMI and Instance ID we are bundling (This one!)
+current_ami_id=$(curl -s http://169.254.169.254/latest/meta-data/ami-id) 
+current_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id) 
+
+# aws availability zone
+aws_avail_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
+
 # ami descriptions and ami name
-aws_ami_description="Intermediate AMI snapshot, for backup-reasons"
+aws_ami_description="jenkinspoc-AMI "$current_instance_id" of "$date_ftm
 string=$(grep ID /etc/lsb-release)
 id=${string##*=}
 string=$(grep RELEASE /etc/lsb-release)
@@ -101,20 +108,10 @@ else
 fi
 
 
-# AMI and Instance ID we are bundling (This one!)
-current_ami_id=$(curl -s http://169.254.169.254/latest/meta-data/ami-id) 
-current_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id) 
-
-# aws availability zone
-aws_avail_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
-
-## instance id
-aws_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id/)
 
 # descriptions
-aws_snapshot_description="Instance "$current_instance_id", delete after registering new EBS AMI"
-date=$(date)
-aws_ami_name="Ubuntu-LTS-12.04-Jenkins-Server-$(date '+%F-%H-%M-%S')"
+aws_snapshot_description="jenkinspoc AMI: "$current_instance_id", delete after registering new EBS AMI"
+aws_ami_name="jenkinspoc Instance $current_instance_id copied to EBS $date_fmt" 
 
 ## services to stop/start while bundeling
 services="jenkins rabbitmq-server redis-server jpdm"
