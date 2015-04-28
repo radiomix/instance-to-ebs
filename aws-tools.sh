@@ -131,11 +131,6 @@ export AWS_REGION=$aws_region
 
 if [[ "$aws_architecture" == "" ]]; then
     aws_architecture="x86_64"
-    echo -n "Enter your AWS ARCHITECTURE: default[x86_64]"
-    read input
-    if [[ "$input" != "" ]]; then
-        aws_architecture="$input"
-    fi
 fi
 export AWS_ARCHITECTURE=$aws_architecture
 
@@ -156,8 +151,8 @@ if [ -d /tmp/cert/ ]; then # may be in /tmp/cert?
    echo "Found these files in /tmp/cert/ "
    ls /tmp/cert/
 fi
-unset AWS_CERT_PATH
-unset AWS_PK_PATH
+#unset AWS_CERT_PATH
+#unset AWS_PK_PATH
 
 if [[ "$AWS_CERT_PATH" == "" ]]
 then
@@ -166,7 +161,7 @@ then
   if [ ! -f "$aws_cert_path"  ]; then
         error_msg="*** ERROR: AWS X509 CERT FILE:$aws_cert_path NOT FOUND!"
         echo "$error_msg"
-        export AWS_PK_PATH=""
+        exit
   fi
   export AWS_CERT_PATH=$aws_cert_path
 fi
@@ -178,7 +173,7 @@ then
   if [  ! -f "$aws_pk_path" ]; then
         error_msg="*** ERROR: AWS X509 PK FILE:$aws_pk_path NOT FOUND!"
         echo "$error_msg"
-        export AWS_PK_PATH=""
+        exit
   fi
 fi
 export AWS_PK_PATH=$aws_pk_path
