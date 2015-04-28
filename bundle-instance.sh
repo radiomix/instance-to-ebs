@@ -23,6 +23,9 @@
 #######################################
 ## config variables
 
+## read config variables form shell script
+source aws-tools.sh
+
 # ami descriptions and ami name
 aws_ami_description="Intermediate AMI snapshot, for backup-reasons"
 date_fmt=$(date '+%F-%H-%M-%S')
@@ -40,7 +43,7 @@ fi
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
   echo " ERROR: directory $bundle_dir to bundle the image is not writable!! "
-  return -11
+  exit -11
 fi
 
 # read AWS S3 Bucket from env variable and concat date
@@ -68,7 +71,7 @@ aws_secret_key=$AWS_SECRET_KEY
 aws_region=$AWS_REGION
 if [[ "$aws_region" == "" ]]; then
   echo " ERROR: No AWS_REGION given!! "
-  return -2
+  exit -2
 fi
 echo "Using region:$aws_region"
 
@@ -76,18 +79,18 @@ echo "Using region:$aws_region"
 aws_architecture=$AWS_ARCHITECTURE
 if [[ "$aws_architecture" == "" ]]; then
   echo " ERROR: No AWS_ARCHITECTURE given!! "
-  return -3
+  exit -3
 fi
 echo "Using architecture:$aws_architecture"
 
 # x509 cert/pk file
 if [[ "$AWS_PK_PATH" == "" ]]; then
   echo " ERROR: X509 private key file \"$AWS_PK_PATH\" not found!! "
-  return -21
+  exit -21
 fi
 if [[ "$AWS_CERT_PATH" == "" ]]; then
   echo " ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
-  return -22
+  exit -22
 fi
 
 # log file
