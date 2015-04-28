@@ -9,10 +9,9 @@ it is a process with several steps, we split the task in two:
 
 ________
 #### **Step 1**: Bundle and register an Instance backed AMI
-To bundle and register an Instance backed AMI, run the two shell
-scripts on the instance to be bundled:
+To bundle and register an Instance backed AMI, run the shell
+script on the instance to be bundled:
 ```
-$source aws-tools.sh
 $./bundle_intance.sh
 ```
 We recommend the following parameter during a `bundle_instance.sh` run:
@@ -31,9 +30,8 @@ parameters for **Step 2**.
 To unbundle the Instance backed AMI and register an EBS backed AMI, you
 boot an EBS backed AMI and load the X.509 files up. You also need
 the log file `bundle-2015-04-24-10-37-19.log` containing the AWS
-paramter of **Step 1** at hand. Then run the two shell scripts:
+paramter of **Step 1** at hand. Then run the shell script:
 ```
-$source aws-tools.sh
 $./convert-instance-to-ebs.sh
 ```
 -------------

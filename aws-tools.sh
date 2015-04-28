@@ -199,6 +199,7 @@ if [[ "$error_msg" != ""  ]]; then
   echo "************ ERROR *******************"
   echo "*** PLEASE REPEATE THIS STEP AGAIN!"
   unset error_msg
+  exit 
 else 
   echo "***  DONE WHITH $0"
 fi
