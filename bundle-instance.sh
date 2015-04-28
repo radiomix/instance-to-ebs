@@ -84,14 +84,19 @@ fi
 echo "Using architecture:$aws_architecture"
 
 # x509 cert/pk file
-if [[ "$AWS_PK_PATH" == "" ]]; then
-  echo " ERROR: X509 private key file \"$AWS_PK_PATH\" not found!! "
-  exit -21
-fi
 if [[ "$AWS_CERT_PATH" == "" ]]; then
   echo " ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
   exit -22
+else
+  export  AWS_CERT_PATH=$AWS_CERT_PATH
 fi
+if [[ "$AWS_PK_PATH" == "" ]]; then
+  echo " ERROR: X509 private key file \"$AWS_PK_PATH\" not found!! "
+  exit -21
+else 
+  export AWS_PK_PATH=$AWS_PK_PATH
+fi
+
 
 # log file
 log_file=bundle-$date_fmt.log
@@ -171,7 +176,7 @@ profile=${meta_data_profile##default-}
 virtual_type="--virtualization-type "$profile" "
 aws_ami_name=$aws_ami_name"-"$profile
 
-echo "*** Found virtualization parameter $profile"
+echo "*** Found virtualization type $profile"
 ## on paravirtual AMI every thing is fine here
 partition=""
 ## for hvm AMI we set partition mbr
