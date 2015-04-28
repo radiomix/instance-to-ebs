@@ -27,6 +27,12 @@ cwd=$(pwd)
 
 ## read config variables form shell script
 source aws-tools.sh
+## read functions
+source functions.sh
+
+# log file
+log_file=bundle-$date_fmt.log
+touch $log_file
 
 # ami descriptions and ami name
 aws_ami_description="Intermediate AMI snapshot, for backup-reasons"
@@ -47,18 +53,6 @@ if [[ $result != yes ]]; then
   echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
   exit -11
 fi
-
-# read AWS S3 Bucket from env variable and concat date
-s3_bucket="elemica-jenkinspoc/ami-bundle/$date_fmt"
-echo -n "Type in your AWS_S3_BUCKET or <ENTER> for \"$s3_bucket\""
-read input
-if  [[ "$input" == "" ]]; then
-    export AWS_S3_BUCKET="$s3_bucket"
-else
-    export AWS_S3_BUCKET="$input"
-fi
-## TODO check for double slahes!
-s3_bucket="$AWS_S3_BUCKET"
 
 # image file prefix
 prefix="bundle-instance-"$date_fmt
@@ -116,16 +110,26 @@ aws_snapshot_description="Instance "$current_instance_id", delete after register
 date=$(date)
 aws_ami_name="Ubuntu-LTS-12.04-Jenkins-Server-$(date '+%F-%H-%M-%S')"
 
+## services to stop/start while bundeling
+services="jenkins rabbitmq-server redis-server jpdm"
+echo "These services will be stopped during bundling:"
+echo "\"$services\""
+echo -n "Do you want to stop \"$services\" [n|Y]" 
+read input
+if [[ "$input" == "n" ]];then
+  echo "You can type in services you want to stop, each seperated by white space."
+  echo -n "Please type the services that you want to stop:"
+  read $services
+fi
 
-# log file
-log_file=bundle-$date_fmt.log
-touch $log_file
 
 ## end config variables
 ######################################
 
 
 ######################################
+echo "*** Using these services to stop:$services"
+echo "*** Using these services to stop:$services" >> $log_file
 echo "*** Bundling Instance:$current_instance_id of AMI $current_ami_id:"$output
 echo "*** Bundling Instance:$current_instance_id of AMI $current_ami_id:"$output >> $log_file
 
@@ -258,7 +262,6 @@ log_message="
 *** Using partition:$partition 
 *** Using virtual_type:$virtual_type
 *** Using block_device:$blockDevice
-*** Using s3_bucket:$s3_bucket
 *** Using EC2 version:$ec2_version"
 ## write output to log file
 echo  "$log_message"
@@ -314,7 +317,10 @@ echo $output >> $log_file
 lsblk
 sleep 2
 
-echo "NEXT STEP BUNDLING" && exit
+## stop services
+start_stop_command=stop
+start_stop 
+
 #######################################
 ### this is bundle-work
 ### we write the command string to $log_file and execute it 
@@ -327,8 +333,11 @@ $bundle_command
 sleep 2
 
 
+### TODO start/stop service
+## stop services
+start_stop_command=start
+start_stop 
 
-export AWS_S3_BUCKER=$s3_bucket
 export AWS_MANIFEST=$prefix.manifest.xml
 
 ## manifest of the bundled AMI
@@ -349,7 +358,6 @@ log_message="***
 *** Block device mapping:$blockDevice
 *** Partition flag:$partition
 *** Virtualization:$virtual_type
-*** S3 Bucket:$s3_bucket
 *** Manifest:$prefix.manifest.xml
 *** Region:$aws_region
 ***
@@ -386,9 +394,9 @@ sudo umount $aws_ebs_device
 
 #######################################
 ## create a snapshot and verify it
-echo "*** Creating Snapshot from Volume:$aws_volume_id."
+echo "*** Creating Snapshot from Volume:$aws_bundle_volume_id."
 echo "*** This may take several minutes"
-output=$($EC2_HOME/bin/ec2-create-snapshot $aws_volume_id --region $aws_region -d "$aws_snapshot_description" -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY )
+output=$($EC2_HOME/bin/ec2-create-snapshot $aws_bundle_volume_id --region $aws_region -d "$aws_snapshot_description" -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY )
 aws_snapshot_id=$(echo $output | cut -d ' ' -f 2)
 echo $output
 echo -n "*** Using snapshot:$aws_snapshot_id. Waiting to become ready . "
@@ -417,15 +425,15 @@ echo "*** Registerd new AMI:$aws_registerd_ami_id" >> $log_file
 
 ######################################
 ## unmount and detach EBS volume
-echo "*** Detaching EBS Volume:$aws_volume_id"
-echo "*** Detaching EBS Volume:$aws_volume_id" >> $log_file
-$EC2_HOME/bin/ec2-detach-volume $aws_volume_id --region $aws_region -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
+echo "*** Detaching EBS Volume:$aws_bundle_volume_id"
+echo "*** Detaching EBS Volume:$aws_bundle_volume_id" >> $log_file
+$EC2_HOME/bin/ec2-detach-volume $aws_bundle_volume_id --region $aws_region -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
 
 #######################################
 ## and delete the volume and remove bundle-files
-echo "*** Please delete EBS Volume:$aws_volume_id"
-echo "*** Please delete EBS Volume:$aws_volume_id" >> $log_file
-#$EC2_HOME/bin/ec2-delete-volume $aws_volume_id  -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
+echo "*** Please delete EBS Volume:$aws_bundle_volume_id"
+echo "*** Please delete EBS Volume:$aws_bundle_volume_id" >> $log_file
+#$EC2_HOME/bin/ec2-delete-volume $aws_bundle_volume_id  -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
 echo "*** Deleting EBS Volume:$aws_volume_id"
 sudo rm -rf $bundle_dir/*
 #######################################
