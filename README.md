@@ -106,10 +106,10 @@ Both cert and private key have to be uploaded onto both AMIs.
 #### Processes to stop
 To bundle an instance, all programs writing to root device have to be
 stopped and restarted:
- + /etc/rc2.d/jenkins
- + /etc/rc2.d/rabbitmq-server
- + /etc/rc2.d/redis-server
- + /etc/rc2.d/jpdm
+ + service jenkins stop
+ + service rabbitmq-server stop
+ + service redis-server stop
+ + service jpdm stop
  + erlang process `epmd` by hand
 
 #### AMIs
