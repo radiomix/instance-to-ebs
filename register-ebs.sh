@@ -34,6 +34,7 @@ source functions.sh
 date_fmt=$(date '+%F-%H-%M-%S')
 log_file=bundle-$date_fmt.log
 touch $log_file
+date >> $log_file
 
 # ami descriptions and ami name
 aws_ami_description="Intermediate AMI snapshot, for backup-reasons"
@@ -456,3 +457,5 @@ sudo rm -rf $bundle_dir/*
 cd $cwd
 echo "*** Finished! Created AMI: $aws_registerd_ami_id ***"
 echo "*** Finished! Created AMI: $aws_registerd_ami_id ***" >> $log_file
+date >> $log_file
+
