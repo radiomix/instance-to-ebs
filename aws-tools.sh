@@ -19,6 +19,9 @@
 #######################################
 ## config variables
 
+## error message
+declare error_msg
+
 # aws credentials, may be in env variables?
 aws_secret_key=$AWS_SECRET_KEY
 aws_access_key=$AWS_ACCESS_KEY
@@ -54,11 +57,11 @@ sudo mkdir $prefix
 sudo rm -rf $prefix/*
 rm -f ec2-ami-tools.zip ec2-api-tools.zip
 
-wget http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip
-wget http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.zip
-sudo unzip -q ec2-api-tools.zip -d /usr/local/ec2/
-sudo unzip -q ec2-ami-tools.zip  -d /usr/local/ec2/
-rm -f ec2-ami-tools.zip ec2-api-tools.zip
+#wget http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip
+#wget http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools.zip
+#sudo unzip -q ec2-api-tools.zip -d /usr/local/ec2/
+#sudo unzip -q ec2-ami-tools.zip  -d /usr/local/ec2/
+#rm -f ec2-ami-tools.zip ec2-api-tools.zip
 
 ######################################
 # get java install path
@@ -72,9 +75,9 @@ java_bin=$(which java)
 #   echo "*** Installing Java!"
 #        sudo apt-get install -y --force-yes default-jre
 #        java_bin=$(which java)
-#    else 
-        echo "***  ERROR: No Java version found! EXIT!"
-        return -11
+#    else
+        error_msg=="***  ERROR: No Java version found!"
+        echo "$error_msg"
 #    fi
 fi
 java_path=$(readlink -f $java_bin)
@@ -159,14 +162,17 @@ if [ -d /tmp/cert/ ]; then # may be in /tmp/cert?
    echo "Found these files in /tmp/cert/ "
    ls /tmp/cert/
 fi
+unset AWS_CERT_PATH
+unset AWS_PK_PATH
 
 if [[ "$AWS_CERT_PATH" == "" ]]
 then
   echo -n "Enter /path/to/x509-cert.pem: "
   read aws_cert_path
   if [ ! -f "$aws_cert_path"  ]; then
-        echo "*** ERROR: AWS X509 CERT FILE NOT FOUND IN:$aws_cert_path"
-        return -1
+        error_msg="*** ERROR: AWS X509 CERT FILE:$aws_cert_path NOT FOUND!"
+        echo "$error_msg"
+        export AWS_PK_PATH=""
   fi
   export AWS_CERT_PATH=$aws_cert_path
 fi
@@ -176,14 +182,24 @@ then
   echo -n "Enter /path/to/x509-pk.pem: "
   read aws_pk_path
   if [  ! -f "$aws_pk_path" ]; then
-        echo "*** ERROR: AWS X509 PK FILE NOT FOUND IN:$aws_pk_path"
-        return -1
+        error_msg="*** ERROR: AWS X509 PK FILE:$aws_pk_path NOT FOUND!"
+        echo "$error_msg"
+        export AWS_PK_PATH=""
   fi
 fi
 export AWS_PK_PATH=$aws_pk_path
 
 echo "*** Using x509-cert.pem \"$AWS_CERT_PATH\""
 echo "*** Using x509-pk.pem \"$AWS_PK_PATH\""
-echo 
-echo "***  DONE WHITH $0"
+
+### check error messages
+if [[ "$error_msg" != ""  ]]; then
+  echo "************ ERROR *******************"
+  echo "$error_msg"
+  echo "************ ERROR *******************"
+  echo "*** PLEASE REPEATE THIS STEP AGAIN!"
+  unset error_msg
+else 
+  echo "***  DONE WHITH $0"
+fi
 
