@@ -13,7 +13,7 @@ To bundle and register an Instance backed AMI, run the two shell
 scripts on the instance to be bundled:
 ```
 $source aws-tools.sh
-$source bundle_intance.sh
+$./bundle_intance.sh
 ```
 We recommend the following parameter during a `bundle_instance.sh` run:
 - **virtualization type `paravirtual`**
@@ -34,7 +34,7 @@ the log file `bundle-2015-04-24-10-37-19.log` containing the AWS
 paramter of **Step 1** at hand. Then run the two shell scripts:
 ```
 $source aws-tools.sh
-$source convert-instance-to-ebs.sh
+$./convert-instance-to-ebs.sh
 ```
 -------------
 ### Prerequisites
