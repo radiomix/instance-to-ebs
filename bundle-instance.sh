@@ -104,7 +104,6 @@ touch $log_file
 
 # AMI id we are bundling (This one!)
 current_ami_id=$(curl -s http://169.254.169.254/latest/meta-data/ami-id) 
-output=$($EC2_HOME/bin/ec2-describe-images --region $aws_region $current_ami_id)
 
 ## end config variables
 ######################################
