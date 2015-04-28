@@ -3,9 +3,8 @@
 #   http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference/set-up-ec2-cli-linux.html
 #   http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference/set-up-ami-tools.html
 #  Prerequisites:
-#   - we need installed:
-#		ruby, unzip, wget, openssl
-#       jre is for command ec2-register (CLI Tools need JAVA), thus we check for an installed version
+#   - we need ruby, unzip, wget, openssl 
+#            and default-jre (for command ec2-register (CLI Tools need JAVA), thus we check for an installed version
 #       http://docs.aws.amazon.com/AWSEC2/latest/CommandLineReference/set-up-ec2-cli-linux.html
 #   - we need to export our $AWS_ACCESS_KEY and $AWS_SECRET_KEY as enironment variables like:
 #       export AWS_ACCESS_KEY=your_access_key_id
@@ -21,6 +20,8 @@
 
 ## error message
 declare error_msg
+
+package_list="wget ruby unzip openssl java"
 
 # aws credentials, may be in env variables?
 aws_secret_key=$AWS_SECRET_KEY
@@ -42,13 +43,13 @@ aws_architecture=$AWS_ARCHITECTURE
 ######################################
 ## packages needed anyways
 # We neede some packages:
-#sudo apt-get -q update
-#sudo apt-get -q install -y --force-yes ruby unzip wget openssl
-## we experienced curl SSL errors as in
-## http://tiku.io/questions/3051603/amazon-ec2-s3-self-signed-certificate-ssl-failure-when-using-ec2-upload-bundle
-## so we reload the root certificates
-#sudo update-ca-certificates
-
+for package in ${package_list}; do
+  bin=$(which $package)
+  if [[ "$bin" == "" ]]; then
+     echo "*** ERROR: Command $package not found! Please install $package!"
+     exit
+ fi 
+done
 ######################################
 ## install api/ami tools under /usr/local/ec2
 echo "*** Installing AWS TOOLS"
@@ -68,17 +69,10 @@ rm -f ec2-ami-tools.zip ec2-api-tools.zip
 # used by ec-tools
 echo "*** SETTING JAVA PATH"
 java_bin=$(which java)
- if [[ "$java_bin" == "" ]]; then
-#   echo -n " ERROR:  No Java version found! Should Java be installed? [y|N]"
-#   read input
-#   if [[ "$input" == "y" ]]; then
-#   echo "*** Installing Java!"
-#        sudo apt-get install -y --force-yes default-jre
-#        java_bin=$(which java)
-#    else
-        error_msg=="***  ERROR: No Java version found!"
-        echo "$error_msg"
-#    fi
+if [[ "$java_bin" == "" ]]; then
+    error_msg=="***  ERROR: No Java version found!"
+    echo "$error_msg"
+    exit
 fi
 java_path=$(readlink -f $java_bin)
 echo $java_bin  $java_path
