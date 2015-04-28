@@ -53,7 +53,7 @@ current_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-i
 aws_avail_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
 
 # ami descriptions and ami name
-aws_ami_description="$project-AMI $current_instance_id of $date_ftm $release"
+aws_ami_description="$project-AMI $current_instance_id of $date_fmt $release"
 aws_ami_name="$project-$id-$release-bundle-instance-$date_fmt"
 
 # bundle directory, should be on a partition with lots of space
