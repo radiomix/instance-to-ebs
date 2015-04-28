@@ -35,7 +35,7 @@ paramter of **Step 1** at hand. Then run the shell script:
 $./convert-instance-to-ebs.sh
 ```
 
-#### *** All in one<a name="oneStep"></a> *** Bundle and register and EBS in one big step: {#allInONe}
+####<a name="oneStep"></a>  *** All in one *** Bundle and register and EBS in one big step: 
 To bundle and register an Instance backed AMI as an EBS backed one, we provide
 the script `register-ebs.sh`. It bundles the AMI locally, attaches an EBS
 volume, unbundles to the EBS volume and registers an AMI:
