@@ -5,7 +5,7 @@ Copy an Instance Backed AMI into an EBS Backed AMI
 The [AWS
 docu](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/creating-an-ami-instance-store.html#Using_ConvertingS3toEBS) 
 describes how to copy an Instance Stored AMI into an EBS backed AMI. 
-As it is a process with several steps, we started splitting the task in two. The impatient just jumps to [All in one][]. 
+As it is a process with several steps, we started splitting the task in two. The impatient just jumps to [All in one](oneStep). 
 
 ________
 #### **Step 1**: Bundle and register an Instance backed AMI
@@ -35,7 +35,7 @@ paramter of **Step 1** at hand. Then run the shell script:
 $./convert-instance-to-ebs.sh
 ```
 
-#### *** All in one *** Bundle and register and EBS in one big step: {#allInONe}
+#### *** All in one<a name="oneStep"></a> *** Bundle and register and EBS in one big step: {#allInONe}
 To bundle and register an Instance backed AMI as an EBS backed one, we provide
 the script `register-ebs.sh`. It bundles the AMI locally, attaches an EBS
 volume, unbundles to the EBS volume and registers an AMI:
