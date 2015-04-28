@@ -10,6 +10,6 @@ start_stop_service(){
 }
 
 log_output(){
-	echo $log_message
-	echo $log_message >> $log_fil
+	echo "$log_message"
+	echo "$log_message" >> $log_file
 }
