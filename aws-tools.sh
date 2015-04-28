@@ -137,13 +137,6 @@ export AWS_ARCHITECTURE=$aws_architecture
 aws_access_key=${AWS_ACCESS_KEY:0:3}********${AWS_ACCESS_KEY:${#AWS_ACCESS_KEY}-3:3}
 aws_secret_key=${AWS_SECRET_KEY:0:3}********${AWS_SECRET_KEY:${#AWS_SECRET_KEY}-3:3}
 aws_account_id=${AWS_ACCOUNT_ID:0:3}********${AWS_ACCOUNT_ID:${#AWS_ACCOUNT_ID}-3:3}
-echo
-echo "*** Using AWS_ACCESS_KEY:   \"$aws_access_key\""
-echo "*** Using AWS_SECRET_KEY:   \"$aws_secret_key\""
-echo "*** Using AWS_ACCOUNT_ID:   \"$aws_account_id\""
-echo "*** Using AWS_REGION:       \"$aws_region\""
-echo "*** Using AWS_ARCHITECTURE: \"$aws_architecture\""
-echo
 
 ######################################
 ### set x509-pd/cert file path 
@@ -151,33 +144,37 @@ if [ -d /tmp/cert/ ]; then # may be in /tmp/cert?
    echo "Found these files in /tmp/cert/ "
    ls /tmp/cert/
 fi
-#unset AWS_CERT_PATH
-#unset AWS_PK_PATH
 
 if [[ "$AWS_CERT_PATH" == "" ]]
 then
   echo -n "Enter /path/to/x509-cert.pem: "
-  read aws_cert_path
-  if [ ! -f "$aws_cert_path"  ]; then
-        error_msg="*** ERROR: AWS X509 CERT FILE:$aws_cert_path NOT FOUND!"
+  read input
+  if [ ! -f "$input"  ]; then
+        error_msg="*** ERROR: AWS X509 CERT FILE:$input NOT FOUND!"
         echo "$error_msg"
         exit
   fi
-  export AWS_CERT_PATH=$aws_cert_path
+  export AWS_CERT_PATH=$input
 fi
 
 if [[ "$AWS_PK_PATH" == "" ]]
 then
   echo -n "Enter /path/to/x509-pk.pem: "
-  read aws_pk_path
-  if [  ! -f "$aws_pk_path" ]; then
-        error_msg="*** ERROR: AWS X509 PK FILE:$aws_pk_path NOT FOUND!"
+  read input
+  if [  ! -f "$input" ]; then
+        error_msg="*** ERROR: AWS X509 PK FILE:$input NOT FOUND!"
         echo "$error_msg"
         exit
   fi
+  export AWS_PK_PATH=$input
 fi
-export AWS_PK_PATH=$aws_pk_path
 
+echo
+echo "*** Using AWS_ACCESS_KEY:   \"$aws_access_key\""
+echo "*** Using AWS_SECRET_KEY:   \"$aws_secret_key\""
+echo "*** Using AWS_ACCOUNT_ID:   \"$aws_account_id\""
+echo "*** Using AWS_REGION:       \"$aws_region\""
+echo "*** Using AWS_ARCHITECTURE: \"$aws_architecture\""
 echo "*** Using x509-cert.pem \"$AWS_CERT_PATH\""
 echo "*** Using x509-pk.pem \"$AWS_PK_PATH\""
 
