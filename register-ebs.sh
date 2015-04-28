@@ -31,12 +31,12 @@ source aws-tools.sh
 source functions.sh
 
 # log file
+date_fmt=$(date '+%F-%H-%M-%S')
 log_file=bundle-$date_fmt.log
 touch $log_file
 
 # ami descriptions and ami name
 aws_ami_description="Intermediate AMI snapshot, for backup-reasons"
-date_fmt=$(date '+%F-%H-%M-%S')
 string=$(grep ID /etc/lsb-release)
 id=${string##*=}
 string=$(grep RELEASE /etc/lsb-release)
@@ -119,9 +119,8 @@ read input
 if [[ "$input" == "n" ]];then
   echo "You can type in services you want to stop, each seperated by white space."
   echo -n "Please type the services that you want to stop:"
-  read $services
+  read services
 fi
-
 
 ## end config variables
 ######################################
