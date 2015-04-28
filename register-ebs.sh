@@ -36,6 +36,15 @@ log_file=bundle-$date_fmt.log
 touch $log_file
 date >> $log_file
 
+## project as prefix
+project="jenkinspoc"
+
+## release string
+string=$(grep ID /etc/lsb-release)
+id=${string##*=}
+string=$(grep RELEASE /etc/lsb-release)
+release=${string##*=}
+
 # AMI and Instance ID we are bundling (This one!)
 current_ami_id=$(curl -s http://169.254.169.254/latest/meta-data/ami-id) 
 current_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id) 
@@ -44,12 +53,8 @@ current_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-i
 aws_avail_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
 
 # ami descriptions and ami name
-aws_ami_description="jenkinspoc-AMI "$current_instance_id" of "$date_ftm
-string=$(grep ID /etc/lsb-release)
-id=${string##*=}
-string=$(grep RELEASE /etc/lsb-release)
-release=${string##*=}
-aws_ami_name="jenkinspoc-$id-$release-bundle-instance-$date_fmt"
+aws_ami_description="$project-AMI $current_instance_id of $date_ftm $release"
+aws_ami_name="$project-$id-$release-bundle-instance-$date_fmt"
 
 # bundle directory, should be on a partition with lots of space
 bundle_dir="/mnt/ami-bundle/"
@@ -110,8 +115,7 @@ fi
 
 
 # descriptions
-aws_snapshot_description="jenkinspoc AMI: "$current_instance_id", delete after registering new EBS AMI"
-aws_ami_name="jenkinspoc Instance $current_instance_id copied to EBS $date_fmt" 
+aws_snapshot_description="$project AMI: "$current_instance_id", delete after registering new EBS AMI"
 
 ## services to stop/start while bundeling
 services="jenkins rabbitmq-server redis-server jpdm"
@@ -207,7 +211,6 @@ meta_data_profile=$(curl -s http://169.254.169.254/latest/meta-data/profile/ | g
 profile=${meta_data_profile##default-}
 ### used in ec2-bundle-volume
 virtual_type="--virtualization-type "$profile" "
-aws_ami_name=$aws_ami_name"-"$profile
 
 echo "*** Found virtualization type $profile"
 ## on paravirtual AMI every thing is fine here
@@ -283,7 +286,7 @@ log_message="
 ## write output to log file
 echo  "$log_message"
 echo  "$log_message" >> $log_file
-sleep 5
+sleep 3
 start=$SECONDS
 
 
@@ -441,6 +444,7 @@ output=$($EC2_HOME/bin/ec2-register -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY --regi
 echo $output
 echo $output >> $log_file
 aws_registerd_ami_id=$(echo $output | cut -d ' ' -f 2)
+output=$($EC2_HOME/bin/ec2-create-tags $aws_registerd_ami_id --region $aws_region --tag Name="$aws_ami_description" --tag Project=$project)
 echo "*** Registerd new AMI:$aws_registerd_ami_id"
 echo "*** Registerd new AMI:$aws_registerd_ami_id" >> $log_file
 
