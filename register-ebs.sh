@@ -128,6 +128,10 @@ if [[ "$input" == "n" ]];then
   read services
 fi
 
+## install pv (pipe viewer)
+sudo apt-get install -y --force-yes  pv
+
+
 ## end config variables
 ######################################
 
@@ -391,7 +395,10 @@ image=${manifest/.manifest.xml/""}
 size=$(du -sb $bundle_dir/$image | cut -f 1)
 echo "*** Copying $bundle_dir/$image of size $size to $aws_ebs_device."
 echo "***  This may take several minutes!"
-sudo dd if=$bundle_dir/$image of=$aws_ebs_device bs=1M
+#sudo dd if=$bundle_dir/$image of=$aws_ebs_device bs=1M
+size=$(du -sb $bundle_dir/$image | cut -f 1)
+sudo dd if=$bundle_dir/$image | pv -s $size | sudo dd of=$aws_ebs_device bs=1M
+
 echo "*** Checking partition $aws_ebs_device"
 sudo partprobe $aws_ebs_device
 
