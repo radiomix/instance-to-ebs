@@ -44,7 +44,7 @@ if [[ ! -d $bundle_dir ]]; then
 fi
 result=$(sudo test -w $bundle_dir && echo yes)
 if [[ $result != yes ]]; then
-  echo " ERROR: directory $bundle_dir to bundle the image is not writable!! "
+  echo "*** ERROR: directory $bundle_dir to bundle the image is not writable!! "
   exit -11
 fi
 
@@ -72,35 +72,38 @@ aws_secret_key=$AWS_SECRET_KEY
 # region
 aws_region=$AWS_REGION
 if [[ "$aws_region" == "" ]]; then
-  echo " ERROR: No AWS_REGION given!! "
+  echo "*** ERROR: No AWS_REGION given!! "
   exit -2
 fi
-echo "Using region:$aws_region"
+echo "*** Using region:$aws_region"
 
 # architecture
 aws_architecture=$AWS_ARCHITECTURE
 if [[ "$aws_architecture" == "" ]]; then
-  echo " ERROR: No AWS_ARCHITECTURE given!! "
+  echo "*** ERROR: No AWS_ARCHITECTURE given!! "
   exit -3
 fi
-echo "Using architecture:$aws_architecture"
+echo "*** Using architecture:$aws_architecture"
 
 # x509 cert/pk file
 if [[ "$AWS_CERT_PATH" == "" ]]; then
-  echo " ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
+  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
   exit -22
 else
   export  AWS_CERT_PATH=$AWS_CERT_PATH
 fi
-if [[ "$AWS_PK_PATH" == "" ]]; then
-  echo " ERROR: X509 private key file \"$AWS_PK_PATH\" not found!! "
-  exit -21
-else 
-  export AWS_PK_PATH=$AWS_PK_PATH
+
+if [[ "$AWS_CERT_PATH" == "" ]]; then
+  echo "*** ERROR: X509 cert key file \"$AWS_CERT_PATH\" not found!! "
+  exit -22
+else
+  export  AWS_CERT_PATH=$AWS_CERT_PATH
 fi
 
-# AMI id we are bundling (This one!)
+
+# AMI and Instance ID we are bundling (This one!)
 current_ami_id=$(curl -s http://169.254.169.254/latest/meta-data/ami-id) 
+current_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id) 
 
 # aws availability zone
 aws_avail_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone/)
@@ -109,7 +112,7 @@ aws_avail_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/avail
 aws_instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id/)
 
 # descriptions
-aws_snapshot_description="AMI "$current_ami_id=", delete after registering new EBS AMI"
+aws_snapshot_description="Instance "$current_instance_id", delete after registering new EBS AMI"
 date=$(date)
 aws_ami_name="Ubuntu-LTS-12.04-Jenkins-Server-$(date '+%F-%H-%M-%S')"
 
@@ -123,8 +126,8 @@ touch $log_file
 
 
 ######################################
-echo "*** Bundling AMI:$current_ami_id:"$output
-echo "*** Bundling AMI:$current_ami_id:"$output >> $log_file
+echo "*** Bundling Instance:$current_instance_id of AMI $current_ami_id:"$output
+echo "*** Bundling Instance:$current_instance_id of AMI $current_ami_id:"$output >> $log_file
 
 ## packages needed anyways
 echo "*** Installing packages 'gdisk kpartx'"
@@ -263,11 +266,13 @@ echo  "$log_message" >> $log_file
 sleep 5
 start=$SECONDS
 
+
 ######################################
 ## creating ebs volume to be bundle root dev
 echo "*** Creating EBS Volume to bundle"
 output=$(sudo -E $EC2_HOME/bin/ec2-create-volume --size 12 --region $aws_region --availability-zone $aws_avail_zone)
 echo $output
+echo $output >> $log_file
 aws_bundle_volume_id=$(echo $output | cut -d ' ' -f 2)
 if [[ "$aws_bundle_volume_id" == "" ]]; then
   echo "*** ERROR: No Aws Volume created!"
@@ -285,12 +290,18 @@ do
     sleep 1
 done
 echo ""
-$EC2_HOME/bin/ec2-create-tags $aws_bundle_volume_id  --region $aws_region --tag Name="EBS Vol: $aws_snapshot_description"
+echo $output
+echo $output >> $log_file
+output=$($EC2_HOME/bin/ec2-create-tags $aws_bundle_volume_id  --region $aws_region --tag Name="$aws_snapshot_description")
+echo $output
+echo $output >> $log_file 
 
 #######################################
 ## attach volume
 echo "*** Attaching EBS Volume:$aws_bundle_volume_id"
-sudo -E $EC2_HOME/bin/ec2-attach-volume $aws_bundle_volume_id -instance $current_instance_id --device $aws_ebs_device --region $aws_region
+output=$(sudo -E $EC2_HOME/bin/ec2-attach-volume $aws_bundle_volume_id -instance $current_instance_id --device $aws_ebs_device --region $aws_region)
+echo $output
+echo $output >> $log_file
 output=""
 while [[ "$output" == "" ]]
 do
@@ -299,12 +310,11 @@ do
     sleep 1
 done
 echo ""
+echo $output >> $log_file
 lsblk
 sleep 2
 
 echo "NEXT STEP BUNDLING" && exit
-
-
 #######################################
 ### this is bundle-work
 ### we write the command string to $log_file and execute it 
@@ -343,7 +353,7 @@ log_message="***
 *** Manifest:$prefix.manifest.xml
 *** Region:$aws_region
 ***
-*** Bundled AMI:$current_ami_id in $period seconds"
+*** Bundled AMI:$current_instance_id of AMI:$current_ami_id in $period seconds"
 
 ## write log message to stdout and to log file
 echo "$log_message"
@@ -393,25 +403,32 @@ do
     sleep 3
 done
 echo ""
+completed=$($EC2_HOME/bin/ec2-describe-snapshots $aws_snapshot_id --region $aws_region | grep completed)
+echo $completed >> $log_file
 
 #######################################
 ## register a new AMI from the snapshot
 output=$($EC2_HOME/bin/ec2-register -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY --region $aws_region -n "$aws_ami_name" -s $aws_snapshot_id -a $AWS_ARCHITECTURE --kernel $AWS_KERNEL)
 echo $output
+echo $output >> $log_file
 aws_registerd_ami_id=$(echo $output | cut -d ' ' -f 2)
 echo "*** Registerd new AMI:$aws_registerd_ami_id"
+echo "*** Registerd new AMI:$aws_registerd_ami_id" >> $log_file
 
 ######################################
 ## unmount and detach EBS volume
 echo "*** Detaching EBS Volume:$aws_volume_id"
+echo "*** Detaching EBS Volume:$aws_volume_id" >> $log_file
 $EC2_HOME/bin/ec2-detach-volume $aws_volume_id --region $aws_region -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
 
 #######################################
 ## and delete the volume and remove bundle-files
 echo "*** Please delete EBS Volume:$aws_volume_id"
+echo "*** Please delete EBS Volume:$aws_volume_id" >> $log_file
 #$EC2_HOME/bin/ec2-delete-volume $aws_volume_id  -O $AWS_ACCESS_KEY -W $AWS_SECRET_KEY
 echo "*** Deleting EBS Volume:$aws_volume_id"
 sudo rm -rf $bundle_dir/*
 #######################################
 cd $cwd
 echo "*** Finished! Created AMI: $aws_registerd_ami_id ***"
+echo "*** Finished! Created AMI: $aws_registerd_ami_id ***" >> $log_file
