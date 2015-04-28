@@ -190,7 +190,7 @@ fi
 ### remove evi entries in /etc/fstab if exist
 echo "*** Checking for efi/uefi partitions in /etc/fstab"
 echo "*** Checking for efi/uefi partitions in /etc/fstab" >> $log_file
-efi=$(grep -i efi /etc/fstab
+efi=$(grep -i efi /etc/fstab)
 if [[ "$efi" != "" ]]; then
   echo "Please delete these UEFI/EFI partition entries \"$efi\" in /etc/fstab"
   read -t 20
