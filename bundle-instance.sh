@@ -132,19 +132,20 @@ echo -n "Enter the root device: /dev/"
 read _device
 root_device="/dev/$_device"
 ## check for root defice
-sudo fdisk -l $root_device
+#sudo fdisk -l $root_device
 sudo file -s $root_device | grep "part /$"
 
 #######################################
 ### show boot cmdline parameter and adjust /boot/grub/menu.lst
 echo "*** Checking for boot parameters"
-echo "*** Next line holds boot command line parameters:"
+echo ""
+echo "*** Next line holds BOOT COMMAND LINE PARAMETERS:"
 cat /proc/cmdline
-echo "*** Next line holds kernel parameters in /boot/grub/menu.lst:"
-grep ^kernel /boot/grub/menu.lst
+echo "*** Next line holds KERNEL PARAMETERS in /boot/grub/menu.lst:"
+grep ^kernel /boot/grub/menu.lst 
 echo
-echo  -n "Do you want to edit kernel parameter in /boot/grub/menu.list "
-echo -n "to reflect command line? [y|N]:"
+echo  "If first entry differs from BOOT COMMAND LINE PARAMETER, please edit /boot/grub/menu.list "
+echo -n "Do you want to edit /boot/grub/menu.list to reflect command line? [y|N]:"
 read edit
 if  [[ "$edit" == "y" ]]; then
   sudo vi /boot/grub/menu.lst
@@ -170,16 +171,12 @@ profile=${meta_data_profile##default-}
 virtual_type="--virtualization-type "$profile" "
 aws_ami_name=$aws_ami_name"-"$profile
 
-echo "*** Checking virtualization parameter for type:$profile"
+echo "*** Found virtualization parameter $profile"
 ## on paravirtual AMI every thing is fine here
 partition=""
 ## for hvm AMI we set partition mbr
-echo -n "Is virtualization type:$profile correct? [y|N]"
-read parameter
-if [[ "$parameter" == "y" ]]; then
-  if  [[ "$profile" == "hvm" ]]; then
-    partition="  --partition mbr "
-  fi
+if  [[ "$profile" == "hvm" ]]; then
+  partition="  --partition mbr "
 fi
 
 #######################################
