@@ -94,7 +94,7 @@ echo "*** Using architecture:$aws_architecture"
 
 
 # descriptions
-aws_snapshot_description="$project AMI: "$current_instance_id", delete after registering new EBS AMI"
+aws_snapshot_description="$project AMI: "$current_instance_id", Snapshot to register new EBS AMI"
 
 ## services to stop/start while bundeling
 services="jenkins rabbitmq-server redis-server jpdm"
