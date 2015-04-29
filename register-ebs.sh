@@ -97,7 +97,7 @@ echo "*** Using architecture:$aws_architecture"
 aws_snapshot_description="$project AMI: "$current_instance_id", Snapshot to register new EBS AMI"
 
 ## services to stop/start while bundeling
-services="jenkins rabbitmq-server redis-server jpdm"
+services="jenkins rabbitmq-server redis-server jpdm revealcloud"
 echo "These services can be stopped during bundling:"
 echo "\"$services\""
 echo -n "Do you want to stop services \"$services\" [n|Y]" 
